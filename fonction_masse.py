@@ -194,3 +194,78 @@ def volume_ferro_ms():
     # et des champs statoriques et rotoriques
     # on peut supposer que pour les MSAP Br=Bs
     return True
+def emprunte_carbone(batt, E_batt, usine_type, pays, res):
+    bouquet_elec = {
+        "France": 31, "Corée": 423, "Pologne": 565, "États-Unis": 414,
+        "Allemagne": 342, "Royaume-Uni": 176, "Espagne": 136, "Suède": 21,
+        "Inde": 593, "Chine": 485, "Canada": 136, "Brésil": 98,
+        "Australie": 460, "Afrique du Sud": 698, "Arabie Saoudite": 542,
+        "Norvège": 41, "Maroc": 415,
+    }
+    carbone_aimant = {"NdFeB": 27.6, "NdFeB_recycle": 12.4}
+    emissions_metaux = {
+        "Fe": 1.9, "Fe_recycle": 0.3, "Al": 13.0, "Al_recycle": 0.4,
+        "Cu": 6.2, "Cu_recycle": 1.3, "Zn": 3.7, "Zn_recycle": 2.1,
+        "Pb": 2.1, "Pb_recycle": 0.4, "Ni": 21.8, "Ni_recycle": 0.3,
+        "Mn": 1.8, "Mn_recycle": 0.1,
+        "Li_roche_dure": 13.9, "Li_saumure": 2.5, "Li_recyclé": 0.5,
+        "Co": 13.9, "Co_recyclé": 0.5,
+        "Graphite": 13.9, "Graphite_recyclé": 0.5,
+    }
+
+    intensite = bouquet_elec[pays]  # gCO2/kWh
+
+    # Fabrication batterie (électricité usine)
+    coeff_usine = 50 if usine_type == "NV" else 65
+    co2_fabric_batt = coeff_usine * intensite * E_batt / 1000  # kgCO2
+
+    # Extraction matières actives batterie
+    co2_extraction_batt = sum(
+        res.get(element, 0) * emissions_metaux.get(element, 0)
+        for element in ["Li_roche_dure", "Co", "Cu", "Ni", "Graphite"]
+    )
+
+    # Fabrication moteur (valeur forfaitaire)
+    co2_fabric_moteur = 320  # kgCO2
+
+    # Extraction cuivre moteur seul
+    co2_extraction_cu_moteur = res.get("cuivre_moteur", 0) * emissions_metaux["Cu"]
+
+    # Extraction cuivre total (moteur + accessoires)
+    co2_extraction_cu_total = (
+        res.get("Cuivre_accessoires", 0) + res.get("cuivre_moteur", 0)
+    ) * emissions_metaux["Cu"]
+
+    # Aimants (NdFeB par défaut)
+    masse_aim = res.get("masse_aimant", 0)
+    co2_aimants = masse_aim * carbone_aimant.get("NdFeB", 27.6)
+
+    # Utilisation batterie (1 500 cycles)
+    co2_utilisation_batt = 1500 * intensite * E_batt / 1000  # kgCO2
+
+    total = (
+        co2_fabric_batt
+        + co2_extraction_batt
+        + co2_fabric_moteur
+        + co2_extraction_cu_total
+        + co2_aimants
+        + co2_utilisation_batt
+    )
+
+    return {
+        
+        "Extraction matières batterie":           co2_extraction_batt,
+        "Fabrication batterie (élec. usine)":    co2_fabric_batt,
+        "Extraction cuivre moteur":               co2_extraction_cu_moteur,
+        "Extraction cuivre total":                co2_extraction_cu_total,
+        "Fabrication moteur (forfait)":           co2_fabric_moteur,
+        "Production aimants":                     co2_aimants,
+        "Consommation charge électrique (1 500 cycles de batterie)":    co2_utilisation_batt,
+        "TOTAL":                                  total,
+        "_meta": {
+            "pays": pays,
+            "usine": usine_type,
+            "intensite_gCO2_kWh": intensite,
+            "E_batt_kWh": E_batt,
+        }
+    }
