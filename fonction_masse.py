@@ -149,7 +149,7 @@ def conducteur_rotor_mas(g,Ps_cu,R,L):
     p_Cu = 0.017*1e-3
     J=6 #A/mm2
     v_conducteur_rotor = (g*Ps_cu/(p_Cu*(J*1e6)**2))*(1+2*(1/L)*(2*math.pi*R)) #première partie c volume des barre deuxième volume des anneaux de court circuit
-    m_conduct_rotor= (8960)*v_conducteur_rotor
+    m_conduct_rotor= v_conducteur_rotor
     return m_conduct_rotor
 
 def masse_cuivre_accessoires(P_traction,U,c_type,E_batt):
@@ -189,11 +189,122 @@ def masse_cuivre_accessoires(P_traction,U,c_type,E_batt):
     return ((cuivre_inverter+cuivre_cables_voiture+cuivre_info+cuivre_vehicule_reseau+cuivre_compteur_borne+cuivre_reseau_servitude),dico_masse)
 
 
-def volume_ferro_ms():
+def volume_ferro_ms(E_batt):
     # on doit trouver le Diamètre externe du stator à partir du champ dans l'entrefer
     # et des champs statoriques et rotoriques
     # on peut supposer que pour les MSAP Br=Bs
     return True
+
+def emprunte_carbone_v1(batt,E_batt,usine_type,pays,res):
+
+    #Pour 1 kWh de batterie produite => entre 50 (NorthVolt) et 65 (Tesla) KWh consommés en électricité pour la fabrication
+    #Datas 2025 https://app.electricitymaps.com/map/all/yearly
+    #extraction de moins de 100kt de lithium par an
+    bouquet_elec = {
+        "France": 31,
+        "Corée": 423,
+        "Pologne": 565,
+        "États-Unis": 414,
+        "Allemagne": 342,
+        "Royaume-Uni": 176,
+        "Espagne": 136,
+        "Suède": 21,
+        "Inde": 593,
+        "Chine": 485,
+        "Canada": 136,
+        "Brésil": 98,
+        "Australie": 460,
+        "Afrique du Sud": 698,
+        "Arabie Saoudite": 542,
+        "Norvège": 41,
+        "Maroc":415
+    }
+    #impact carbone production aimants kg/kg
+    carbone_aimant = {
+        "NdFeB": 27.6,
+        "NdFeB_recycle": 12.4,
+    }
+    #kgCO2/kWh fourni pour un cycle par jour pdt 20 ans soit  7300 cycles source techniques de l'ingénieur
+    carbone_batterie_total = {
+        "LFP" : 84,
+        "NMC811":78,
+        "NMC622":76,
+        "NMC111":72,
+    }
+    #kgCO2/kg de métal source technique de l'ingénieur
+    #pour le lithium deux types d'extraction https://www.arbor.eco/fr/blog/lithium-environmental-impact
+    #Pour le li recyclé valeur arbitraire mise 
+    #Pour le cobalt et le graphite source disant que Lithium et Cobalt sont extraits de manière similaires
+    emissions_metaux = {
+        "Fe": 1.9,
+        "Fe_recycle": 0.3,
+        "Al": 13.0,
+        "Al_recycle": 0.4,
+        "Cu": 6.2,
+        "Cu_recycle": 1.3,
+        "Zn": 3.7,
+        "Zn_recycle": 2.1,
+        "Pb": 2.1,
+        "Pb_recycle": 0.4,
+        "Ni": 21.8,
+        "Ni_recycle": 0.3,
+        "Mn": 1.8,
+        "Mn_recycle": 0.1,
+        "Li_roche_dure":13.9,
+        "Li_saumure": 2.5,
+        "Li_recyclé":0.5,
+        "Co" :13.9,
+        "Co_recyclé":0.5,
+        "Graphite" :13.9,
+        "Graphite_recyclé":0.5
+    }
+    
+    #gCO2/km parcourus source technique de l'ingénieur sur une base de 200 000 km parcourus
+    # pas sur de l'utiliser
+    impacts_nd_dy_feb_pmsm = {
+    "Sweden": {
+        "climat": {
+            "phase_utilisation": 0.85,
+            "production_moteur": 1.60,
+            "production_aimant": 0.10,
+            "total": 2.55
+        },
+        "toxicite": {
+            "phase_utilisation": 1.05,
+            "production_moteur": 4.40,
+            "production_aimant": 0.10,
+            "total": 5.55
+        }
+    },
+    "USA": {
+        "climat": {
+            "phase_utilisation": 9.35,
+            "production_moteur": 1.80,
+            "production_aimant": 0.10,
+            "total": 11.25
+        },
+        "toxicite": {
+            "phase_utilisation": 3.20,
+            "production_moteur": 4.50,
+            "production_aimant": 0.10,
+            "total": 7.80
+        }
+    }
+}
+
+    if usine_type =="NV":
+        elec_fabric_batt_kg = 50*bouquet_elec[pays]*E_batt/1000
+    else: 
+        elec_fabric_batt_kg = 65*bouquet_elec[pays]*E_batt/1000
+    extraction_mat_bat = sum([res[element]*emissions_metaux[element] for element in ["Li","Co","Cu","Ni","Graphite"]])
+    fabric_moteur_kg = 320
+    extraction_cu_moteur = res["cuivre_moteur"]*emissions_metaux["Cu"]
+    extraction_cu_total = (res["Cuivre_accessoires"]+res["cuivre_moteur"])*emissions_metaux["Cu"]
+    production_aimant = res["masse_aimant"]*carbone_aimant
+    #utilisation batterie 1500 cycles sur une vie
+    elec_utilisation_batt_kg = 1500*bouquet_elec[pays]*E_batt/1000
+
+
 def emprunte_carbone(batt, E_batt, usine_type, pays, res):
     bouquet_elec = {
         "France": 31, "Corée": 423, "Pologne": 565, "États-Unis": 414,
@@ -255,11 +366,8 @@ def emprunte_carbone(batt, E_batt, usine_type, pays, res):
     return {
         
         "Extraction matières batterie":           co2_extraction_batt,
-        "Fabrication batterie (élec. usine)":    co2_fabric_batt,
-        "Extraction cuivre moteur":               co2_extraction_cu_moteur,
         "Extraction cuivre total":                co2_extraction_cu_total,
-        "Fabrication moteur (forfait)":           co2_fabric_moteur,
-        "Production aimants":                     co2_aimants,
+        "Extraction aimants":                     co2_aimants,
         "Consommation charge électrique (1 500 cycles de batterie)":    co2_utilisation_batt,
         "TOTAL":                                  total,
         "_meta": {
