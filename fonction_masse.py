@@ -350,7 +350,6 @@ def emprunte_carbone(batt, E_batt, pays, res):
     co2_utilisation_batt = 1500 * intensite * E_batt / 1000  # kgCO2
 
     total = (
-        co2_fabric_batt
         + co2_extraction_batt
         + co2_extraction_cu_total
         + co2_aimants
