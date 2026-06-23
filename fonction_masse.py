@@ -150,7 +150,7 @@ def conducteur_rotor_mas(g,Ps_cu,R,L):
     J=6 #A/mm2
     v_conducteur_rotor = (g*Ps_cu/(p_Cu*(J*1e6)**2))*(1+2*(1/L)*(2*math.pi*R)) #première partie c volume des barre deuxième volume des anneaux de court circuit
     m_conduct_rotor= v_conducteur_rotor
-    return m_conduct_rotor
+    return m_conduct_rotor/10
 
 def masse_cuivre_accessoires(P_traction,U,c_type,E_batt):
     reseau_servitude = {
