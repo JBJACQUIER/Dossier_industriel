@@ -305,7 +305,7 @@ def emprunte_carbone_v1(batt,E_batt,usine_type,pays,res):
     elec_utilisation_batt_kg = 1500*bouquet_elec[pays]*E_batt/1000
 
 
-def emprunte_carbone(batt, E_batt, usine_type, pays, res):
+def emprunte_carbone(batt, E_batt, pays, res):
     bouquet_elec = {
         "France": 31, "Corée": 423, "Pologne": 565, "États-Unis": 414,
         "Allemagne": 342, "Royaume-Uni": 176, "Espagne": 136, "Suède": 21,
