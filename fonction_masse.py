@@ -138,7 +138,7 @@ def cuivre_rotor_ms(I_exc, bmax, R, L, p):
     
     # Volume cuivre
     V_cu_rotor = l_tot_spire * S_cu
-    return V_cu_rotor
+    return V_cu_rotor/10
 def conducteur_rotor_mas(g,Ps_cu,R,L):
     #On calcule le volume de conducteur en fonction des pertes au rotor Pr = g*Ps_cu 
     # avec Ps_cu pertes cuivres au stator
