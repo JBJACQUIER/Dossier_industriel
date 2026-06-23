@@ -326,9 +326,6 @@ def emprunte_carbone(batt, E_batt, pays, res):
 
     intensite = bouquet_elec[pays]  # gCO2/kWh
 
-    # Fabrication batterie (électricité usine)
-    coeff_usine = 50 if usine_type == "NV" else 65
-    co2_fabric_batt = coeff_usine * intensite * E_batt / 1000  # kgCO2
 
     # Extraction matières actives batterie
     co2_extraction_batt = sum(
@@ -336,8 +333,6 @@ def emprunte_carbone(batt, E_batt, pays, res):
         for element in ["Li_roche_dure", "Co", "Cu", "Ni", "Graphite"]
     )
 
-    # Fabrication moteur (valeur forfaitaire)
-    co2_fabric_moteur = 320  # kgCO2
 
     # Extraction cuivre moteur seul
     co2_extraction_cu_moteur = res.get("cuivre_moteur", 0) * emissions_metaux["Cu"]
@@ -357,7 +352,6 @@ def emprunte_carbone(batt, E_batt, pays, res):
     total = (
         co2_fabric_batt
         + co2_extraction_batt
-        + co2_fabric_moteur
         + co2_extraction_cu_total
         + co2_aimants
         + co2_utilisation_batt
@@ -372,7 +366,6 @@ def emprunte_carbone(batt, E_batt, pays, res):
         "TOTAL":                                  total,
         "_meta": {
             "pays": pays,
-            "usine": usine_type,
             "intensite_gCO2_kWh": intensite,
             "E_batt_kWh": E_batt,
         }
