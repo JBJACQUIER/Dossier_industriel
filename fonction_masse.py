@@ -111,38 +111,38 @@ def cuivre_stator(P_traction,P_alim,V,bmax,R,L,p,Couple):
     return [V_cu_stator,P_cu_s]
 
 def cuivre_rotor_ms(I_exc, bmax, R, L, p, e_entrefer=5e-4):
-        """
-        I_exc      : courant d'excitation [A]
-        bmax       : induction max dans l'entrefer [T]
-        R          : rayon du rotor [m]
-        L          : longueur axiale [m]
-        p          : nombre de paires de pôles
-        e_entrefer : épaisseur de l'entrefer [m], défaut 0.5 mm
-        """
-        # Densité de courant admissible
-        J = 6  # A/mm²
-    
-        # Section du conducteur
-        S_cu = (I_exc / J) * 1e-6  # m²  ← corrigé
-    
-        # Ampères-tours par pôle (loi d'Ampère, entrefer dominant)
-        kc   = 1.1   # coefficient de Carter (encoche semi-fermée typique)
-        mu0  = 4 * math.pi * 1e-7
-        AT_pole = (bmax / mu0) * kc * e_entrefer  # ← corrigé
-    
-        # Nombre de spires
-        N_spires_pole  = AT_pole / I_exc
-        N_spires_total = p * N_spires_pole
-    
-        # Longueur d'une spire (actif + têtes)
-        l_tete    = 30e-3          # 30 mm par tête, ordre de grandeur raisonnable
-        l_spire   = 2 * L + 2 * l_tete  # m
-    
-        # Volume de cuivre rotor
-        V_cu_rotor = l_spire * N_spires_total * S_cu  # m³
-    
-        return V_cu_rotor
-    def conducteur_rotor_mas(g,Ps_cu,R,L):
+    """
+    I_exc      : courant d'excitation [A]
+    bmax       : induction max dans l'entrefer [T]
+    R          : rayon du rotor [m]
+    L          : longueur axiale [m]
+    p          : nombre de paires de pôles
+    e_entrefer : épaisseur de l'entrefer [m], défaut 0.5 mm
+    """
+    # Densité de courant admissible
+    J = 6  # A/mm²
+
+    # Section du conducteur
+    S_cu = (I_exc / J) * 1e-6  # m²  ← corrigé
+
+    # Ampères-tours par pôle (loi d'Ampère, entrefer dominant)
+    kc   = 1.1   # coefficient de Carter (encoche semi-fermée typique)
+    mu0  = 4 * math.pi * 1e-7
+    AT_pole = (bmax / mu0) * kc * e_entrefer  # ← corrigé
+
+    # Nombre de spires
+    N_spires_pole  = AT_pole / I_exc
+    N_spires_total = p * N_spires_pole
+
+    # Longueur d'une spire (actif + têtes)
+    l_tete    = 30e-3          # 30 mm par tête, ordre de grandeur raisonnable
+    l_spire   = 2 * L + 2 * l_tete  # m
+
+    # Volume de cuivre rotor
+    V_cu_rotor = l_spire * N_spires_total * S_cu  # m³
+
+    return V_cu_rotor
+def conducteur_rotor_mas(g,Ps_cu,R,L):
     #On calcule le volume de conducteur en fonction des pertes au rotor Pr = g*Ps_cu 
     # avec Ps_cu pertes cuivres au stator
     #g glissement
